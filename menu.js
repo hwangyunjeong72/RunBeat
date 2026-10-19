@@ -40,12 +40,25 @@
       button.setAttribute("aria-expanded","true");
     });
   });
-  const navigate=(eventType)=>{
-    closeMenu();
-    window.dispatchEvent(new Event(eventType));
+  const navigate=(destination)=>{
+    const handler=window.RunBeatNavigation && window.RunBeatNavigation[destination];
+    if(typeof handler!=="function"){
+      console.error("RunBeat Diary navigation is unavailable. Check diary.js loading.");
+      alert("화면을 열 수 없어요. 사이트를 새로고침한 뒤 다시 시도해 주세요.");
+      return;
+    }
+    try{
+      const success=handler();
+      if(success===false)return; // The user cancelled the navigation.
+      closeMenu();
+      setCurrentLocation();
+    }catch(error){
+      console.error("RunBeat menu navigation failed:",error);
+      alert("화면 이동 중 오류가 발생했어요. 새로고침 후 다시 시도해 주세요.");
+    }
   };
-  homeLink.addEventListener("click",()=>navigate("runbeat:navigate-home"));
-  diaryLink.addEventListener("click",()=>navigate("runbeat:navigate-diary"));
+  homeLink.addEventListener("click",()=>navigate("toRunBeat"));
+  diaryLink.addEventListener("click",()=>navigate("toDiary"));
   document.addEventListener("pointerdown",event=>{
     if(panel.hidden || panel.contains(event.target) || openButtons.some(button=>button.contains(event.target)))return;
     closeMenu();
