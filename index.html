@@ -19,11 +19,19 @@
     button { cursor:pointer; }
     button:disabled { opacity:.4;cursor:not-allowed; }
     button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible { outline:3px solid #94b2ff;outline-offset:3px; }
-    .phone { width:min(100%,440px);min-height:min(100dvh,782px);margin:24px auto; background:var(--bg); border:1px solid rgba(10,30,60,.07);border-radius:36px;overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column; }
+    .phone { position:relative;width:min(100%,440px);min-height:min(100dvh,782px);margin:24px auto; background:var(--bg); border:1px solid rgba(10,30,60,.07);border-radius:36px;overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column; }
     .inner { padding:26px 22px 19px;display:flex;flex-direction:column;flex:1;gap:17px; }
     .topbar { display:flex;align-items:center;justify-content:space-between; }
     .iconbtn { border:1px solid var(--border);background:var(--surface);color:var(--ink);border-radius:17px;width:49px;height:49px;display:grid;place-items:center;box-shadow:0 4px 16px rgba(26,42,75,.035); }
     .iconbtn svg { width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round; }
+    .app-menu-panel { position:absolute;z-index:70;top:82px;right:19px;width:min(290px,calc(100% - 38px));background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:12px;box-shadow:0 18px 45px rgba(14,28,50,.23); }
+    .app-menu-label {margin:4px 8px 9px;color:var(--muted);font-size:10px;letter-spacing:1.4px;font-weight:850;}
+    .app-menu-item {width:100%;display:flex;align-items:center;gap:11px;text-align:left;padding:13px 12px;border:0;border-radius:13px;background:transparent;color:var(--ink);}
+    .app-menu-item:hover,.app-menu-item:focus-visible,.app-menu-item[aria-current="page"] {background:var(--soft);}
+    .app-menu-item svg {width:20px;height:20px;flex:none;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+    .app-menu-item strong {display:block;font-size:13px;font-weight:850;}
+    .app-menu-item small {display:block;font-size:11px;color:var(--muted);margin-top:3px;}
+    .app-menu-item[aria-current="page"] strong {color:var(--accent);}
     .theme-switch { display:flex;align-items:center;gap:8px;border:0;background:transparent;color:var(--muted);padding:0; }
     .switch {width:62px;height:33px;border-radius:30px;background:#dce4ff;padding:4px;display:flex;align-items:center;transition:background .2s;}
     .switch-dot { width:25px;height:25px;border-radius:50%;background:#fff;box-shadow:0 2px 7px #152a4d2b;display:grid;place-items:center;color:#5065ec;transition:transform .2s; }
@@ -102,6 +110,17 @@
 </head>
 <body>
   <main class="phone" id="app">
+    <nav id="appMenuPanel" class="app-menu-panel" aria-label="화면 이동" hidden>
+      <p class="app-menu-label">RUNBEAT MENU</p>
+      <button id="menuRunBeat" class="app-menu-item" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m9 7 7 5-7 5Z"/></svg>
+        <span><strong>RunBeat</strong><small>기존 러닝 측정 화면</small></span>
+      </button>
+      <button id="menuDiary" class="app-menu-item" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18"/></svg>
+        <span><strong>기록 작성/모음</strong><small>달력형 러닝 다이어리</small></span>
+      </button>
+    </nav>
     <div class="inner">
       <header class="topbar">
         <button class="theme-switch" type="button" id="themeButton" aria-label="다크 모드로 전환" aria-pressed="false">
@@ -110,7 +129,7 @@
           </span></span>
           <span class="theme-name" id="themeText">라이트</span>
         </button>
-        <button class="iconbtn" type="button" id="menuButton" aria-label="메뉴 (준비 중)" title="메뉴 (준비 중)">
+        <button class="iconbtn" type="button" id="menuButton" aria-label="메뉴 열기" aria-controls="appMenuPanel" aria-expanded="false" title="화면 이동 메뉴">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
         </button>
       </header>
@@ -190,7 +209,7 @@
             <p class="diary-eyebrow">MY RUNNING STORY</p>
             <h2>RunBeat <span>Diary.</span></h2>
           </div>
-          <span aria-hidden="true" style="font-size:27px">📅</span>
+          <button class="iconbtn" type="button" id="diaryMenuButton" aria-label="메뉴 열기" aria-controls="appMenuPanel" aria-expanded="false" title="화면 이동 메뉴"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
         </header>
         <p class="diary-subtitle">달력에서 날짜를 선택해 러닝 기록을 모으고, 그날의 기분과 음악을 일기로 남겨 보세요.</p>
         <section class="diary-stats" aria-label="선택한 달의 운동 통계">
@@ -225,7 +244,7 @@
             <p class="diary-eyebrow">RUNNING JOURNAL</p>
             <h2 id="diaryEditorTitle">새 러닝 일기 작성</h2>
           </div>
-          <span aria-hidden="true" style="font-size:27px">✍️</span>
+          <button class="iconbtn" type="button" id="diaryEditorMenuButton" aria-label="메뉴 열기" aria-controls="appMenuPanel" aria-expanded="false" title="화면 이동 메뉴"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
         </header>
         <p class="diary-subtitle">러닝 기록을 남기고 오늘 들은 음악과 느낀 점을 적어 보세요.</p>
         <form id="diaryForm" class="diary-form" novalidate>
@@ -508,7 +527,6 @@
       gpsMode="manual";stopGPS();distanceMeters=km*1000;
       setText("gpsText","직접 입력한 거리");render();toast("누적 거리 "+km+"km를 반영했어요.");
     });
-    $("menuButton").addEventListener("click",()=>toast("메뉴와 PlayList 작성은 준비 중이에요. 기록 작성/모음은 아래 러닝 다이어리 버튼을 눌러 주세요."));
     const themeButton=$("themeButton");
     const changeTheme=(value)=>{
       document.documentElement.dataset.theme=value;
@@ -527,5 +545,6 @@
   })();
   </script>
   <script src="./diary.js"></script>
+  <script src="./menu.js"></script>
 </body>
 </html>
