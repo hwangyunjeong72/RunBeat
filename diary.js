@@ -213,18 +213,24 @@
   // Shared navigation menu: users can switch between the run tracker and their diary.
   // Prevent losing an unsaved diary entry without confirmation.
   const confirmLeaveEditor=()=>editorScreen.hidden || window.confirm("작성 중인 일기가 저장되지 않았어요. 화면을 이동할까요?");
-  window.addEventListener("runbeat:navigate-home",()=>{
-    if(!confirmLeaveEditor())return;
+  const goToRunBeat=()=>{
+    if(!confirmLeaveEditor())return false;
     returnHome();
-  });
-  window.addEventListener("runbeat:navigate-diary",()=>{
+    return true;
+  };
+  const goToDiary=()=>{
     if(root.hidden && $("startButton").disabled){
       alert("진행 중인 러닝을 먼저 종료한 뒤 기록 작성/모음으로 이동해 주세요.");
-      return;
+      return false;
     }
-    if(!confirmLeaveEditor())return;
+    if(!confirmLeaveEditor())return false;
     openCalendar(root.hidden?today:selected);
-  });
+    return true;
+  };
+  // The menu calls these functions directly, without an event-only navigation bridge.
+  window.RunBeatNavigation={toRunBeat:goToRunBeat,toDiary:goToDiary};
+  window.addEventListener("runbeat:navigate-home",goToRunBeat);
+  window.addEventListener("runbeat:navigate-diary",goToDiary);
   window.addEventListener("runbeat:write-diary",event=>{
     const data=event.detail;
     if(!data)return;
