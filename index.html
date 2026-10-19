@@ -508,7 +508,7 @@
       gpsMode="manual";stopGPS();distanceMeters=km*1000;
       setText("gpsText","직접 입력한 거리");render();toast("누적 거리 "+km+"km를 반영했어요.");
     });
-    $("menuButton").addEventListener("click",()=>toast("메뉴와 기록 모음·플레이리스트는 다음 버전에서 제공할 예정이에요."));
+    $("menuButton").addEventListener("click",()=>toast("메뉴와 PlayList 작성은 준비 중이에요. 기록 작성/모음은 아래 러닝 다이어리 버튼을 눌러 주세요."));
     const themeButton=$("themeButton");
     const changeTheme=(value)=>{
       document.documentElement.dataset.theme=value;
