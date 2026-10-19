@@ -79,7 +79,10 @@
     .result-list {display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0;}
     .result-item {padding:12px;background:var(--surface2);border-radius:13px;font-size:11px;color:var(--muted);}
     .result-item strong {display:block;font-size:19px;color:var(--ink);margin-top:4px;}
-    .close-result {width:100%;border:0;background:var(--accent);color:#fff;border-radius:12px;padding:13px;font-weight:800;}
+    .close-result {width:100%;border:0;background:var(--surface2);color:var(--ink);border-radius:12px;padding:13px;font-weight:800;}
+    .save-result {width:100%;border:0;background:var(--accent);color:var(--accentInk);border-radius:12px;padding:14px;font-weight:850;}
+    .result-actions {display:flex;flex-direction:column;gap:9px;}
+    #finishDialog {max-height:calc(100dvh - 40px);overflow-y:auto;}
     html[data-theme="dark"] {color-scheme:dark;--bg:#0e1727;--surface:#18263b;--surface2:#22334a;--ink:#f3f6fe;--muted:#a5b5cc;--border:#2d405b;--accent:#9baaff;--accentInk:#0b1630;--soft:#25355b;--shadow:0 18px 60px #0005;}
     html[data-theme="dark"] body {background:#07101c;}
     html[data-theme="dark"] .switch {background:#40518e;}
@@ -187,8 +190,11 @@
     <h2 id="resultTitle">오늘의 러닝 완료!</h2>
     <p id="resultDesc">러닝을 마쳤어요.</p>
     <div class="result-list" id="resultList"></div>
-    <p>이 버전은 기록을 서버나 목록에 저장하지 않습니다. 필요한 경우 종료 화면을 캡처해 보관해 주세요.</p>
-    <button class="close-result" id="newRunButton" type="button">새 기록 시작하기</button>
+    <p>기록은 서버에 저장하지 않아요. 아래 버튼을 누르면 오늘 결과를 9:16 비율 PNG 이미지로 저장할 수 있어요.</p>
+    <div class="result-actions">
+      <button class="save-result" id="captureButton" type="button">📸 캡쳐하기 · 이미지 저장</button>
+      <button class="close-result" id="newRunButton" type="button">새 기록 시작하기</button>
+    </div>
   </dialog>
   <script>
   "use strict";
@@ -196,7 +202,7 @@
     const $ = (id) => document.getElementById(id);
     const app = $("dashboard"), start = $("startButton"), pause = $("pauseButton"), finish = $("finishButton");
     let state = "idle", watchId = null, ticker = null, lastFix = null, gpsMode = "gps";
-    let distanceMeters = 0, accruedMs = 0, runningSince = 0, toastTimeout = null;
+    let distanceMeters = 0, accruedMs = 0, runningSince = 0, toastTimeout = null, completedRun = null;
     const R = 6371000, STEP_LENGTH = .75;
     const setText = (id, value) => { $(id).textContent = value; };
     const elapsed = () => accruedMs + (state === "running" ? performance.now() - runningSince : 0);
@@ -297,6 +303,7 @@
       const pairs=[["운동 시간",formatTime(total)],["이동 거리",(meters/1000).toFixed(2)+" km"],
         ["평균 속도",speedValue(total,meters).toFixed(1)+" km/h"],["평균 페이스",formatPace(total,meters)+" /km"],
         ["예상 걸음",Math.round(meters/STEP_LENGTH).toLocaleString("ko-KR")+"걸음"]];
+      completedRun={when:new Date(),genre,pairs:pairs.map(([label,value])=>({label,value}))};
       const target=$("resultList");target.replaceChildren();
       for(const [label,value] of pairs){
         const item=document.createElement("div");item.className="result-item";
@@ -305,8 +312,82 @@
       }
       $("finishDialog").showModal();
     });
+
+    // 기록 종료 시 확정된 값만 이미지로 내보냅니다. 외부 캡처 라이브러리는 필요하지 않습니다.
+    const makeCaptureCanvas = (record) => {
+      const canvas=document.createElement("canvas"); canvas.width=900;canvas.height=1600;
+      const ctx=canvas.getContext("2d"); if(!ctx)throw new Error("Canvas not supported");
+      const rounded=(x,y,w,h,r,color)=>{
+        const rr=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+rr,y);ctx.lineTo(x+w-rr,y);
+        ctx.quadraticCurveTo(x+w,y,x+w,y+rr);ctx.lineTo(x+w,y+h-rr);
+        ctx.quadraticCurveTo(x+w,y+h,x+w-rr,y+h);ctx.lineTo(x+rr,y+h);
+        ctx.quadraticCurveTo(x,y+h,x,y+h-rr);ctx.lineTo(x,y+rr);
+        ctx.quadraticCurveTo(x,y,x+rr,y);ctx.closePath();ctx.fillStyle=color;ctx.fill();
+      };
+      const font='"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif';
+      const write=(text,x,y,size,weight,color)=>{ctx.fillStyle=color;ctx.font=weight+" "+size+"px "+font;ctx.textAlign="left";ctx.fillText(text,x,y);};
+      const bg=ctx.createLinearGradient(0,0,900,1600);
+      bg.addColorStop(0,"#111D36");bg.addColorStop(1,"#1B2E54");ctx.fillStyle=bg;ctx.fillRect(0,0,900,1600);
+      rounded(65,72,242,51,25,"#293B63");
+      write("MY RUNNING RECORD",82,105,22,"700","#CFDAFF");
+      write("RunBeat.",65,226,83,"800","#FFFFFF");
+      write("오늘의 러닝 완료!",66,299,42,"750","#DBE6FF");
+      write(new Intl.DateTimeFormat("ko-KR",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"}).format(record.when),68,358,27,"500","#B0C2E4");
+      const time=record.pairs[0].value;
+      rounded(65,413,770,270,36,"#FFFFFF");
+      write("운동 시간",108,484,28,"650","#657690");
+      write(time,106,606,98,"800","#182945");
+      const cells=record.pairs.slice(1);
+      cells.forEach((item,i)=>{
+        const x=65+(i%2)*393,y=721+Math.floor(i/2)*252;
+        rounded(x,y,376,227,29,"#293E65");
+        write(item.label,x+27,y+68,27,"650","#BFCCEA");
+        write(item.value,x+27,y+156,item.value.length>13?35:44,"800","#FFFFFF");
+      });
+      rounded(65,1279,770,112,27,"#31456D");
+      write("오늘의 음악  ·  "+record.genre,95,1348,30,"700","#E7ECFF");
+      write("RUNBEAT  /  KEEP YOUR PACE",66,1457,25,"700","#9AACD0");
+      write("걸음 수는 보폭 0.75m를 가정한 추정값입니다.",66,1512,22,"500","#B5C4DF");
+      return canvas;
+    };
+    const triggerImageDownload=(imageData,filename)=>{
+      const link=document.createElement("a");link.href=imageData;link.download=filename;
+      document.body.appendChild(link);link.click();link.remove();
+    };
+    $("captureButton").addEventListener("click",()=>{
+      if(!completedRun){toast("먼저 기록을 종료해 주세요.");return;}
+      const btn=$("captureButton");btn.disabled=true;
+      try{
+        const canvas=makeCaptureCanvas(completedRun);
+        const imageData=canvas.toDataURL("image/png");
+        const d=completedRun.when;
+        const stamp=d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0")+"_"
+          +String(d.getHours()).padStart(2,"0")+String(d.getMinutes()).padStart(2,"0");
+        const filename="RunBeat_러닝기록_"+stamp+".png";
+        const isiOS=/iPad|iPhone|iPod/.test(navigator.userAgent)
+          || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
+        // iPhone/iPad에서는 파일 공유 시트의 '이미지 저장' 또는 '파일에 저장'을 이용합니다.
+        if(isiOS && navigator.share && navigator.canShare && typeof File!=="undefined"){
+          const binary=atob(imageData.slice(imageData.indexOf(",")+1));
+          const bytes=new Uint8Array(binary.length);
+          for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+          const file=new File([bytes],filename,{type:"image/png"});
+          if(navigator.canShare({files:[file]})){
+            navigator.share({title:"RunBeat 러닝 기록",files:[file]})
+              .then(()=>toast("공유 메뉴에서 이미지 또는 파일 저장을 선택해 주세요."))
+              .catch(error=>{if(error.name!=="AbortError"){triggerImageDownload(imageData,filename);toast("PNG 다운로드를 요청했어요.");}});
+            return;
+          }
+        }
+        triggerImageDownload(imageData,filename);
+        toast("PNG 이미지 저장을 요청했어요. 다운로드 폴더를 확인해 주세요.");
+      }catch(error){
+        console.error("RunBeat 이미지 저장 실패:",error);
+        toast("이미지 저장에 실패했어요. 화면 캡처 기능을 이용해 주세요.");
+      }finally{btn.disabled=false;}
+    });
     $("newRunButton").addEventListener("click",()=>{
-      $("finishDialog").close();accruedMs=0;distanceMeters=0;gpsMode="gps";lastFix=null;
+      $("finishDialog").close();completedRun=null;accruedMs=0;distanceMeters=0;gpsMode="gps";lastFix=null;
       setText("gpsText","시작하면 GPS를 확인해요");render();
     });
     $("manualForm").addEventListener("submit",(event)=>{
