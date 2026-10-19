@@ -98,6 +98,7 @@
     @media (min-width:521px) and (max-height:820px) {.phone{margin:8px auto;}.inner{gap:12px;padding-top:16px;padding-bottom:13px;}.metric{min-height:94px;padding:12px;}}
     @media (prefers-reduced-motion:reduce) {*,*::before,*::after {animation:none!important;transition:none!important;}}
   </style>
+  <link rel="stylesheet" href="./diary.css">
 </head>
 <body>
   <main class="phone" id="app">
@@ -154,13 +155,7 @@
 
         <div class="music">
           <label for="genre">🎧 오늘의 음악</label>
-          <select id="genre" aria-label="러닝 중 감상한 음악 장르">
-            <option value="선택 안 함">선택 안 함</option>
-            <option value="클래식">클래식</option><option value="어쿠스틱">어쿠스틱</option>
-            <option value="테크노">테크노</option><option value="재즈">재즈</option>
-            <option value="유로비트">유로비트</option><option value="댄스">댄스</option>
-            <option value="기타">기타</option>
-          </select>
+          <input id="genre" type="text" maxlength="60" placeholder="장르 직접 입력" aria-label="오늘 들은 음악 장르 직접 입력">
         </div>
 
         <div class="actions" aria-label="러닝 기록 제어">
@@ -180,8 +175,112 @@
         <p class="notice" id="notice">거리·속도는 GPS 위치에 따라 오차가 생길 수 있어요. 걸음 수는 보폭 0.75m 기준 추정치이며 실제 측정 걸음 수가 아니에요.</p>
       </section>
 
-      <footer class="foot">기록은 이 화면에서만 사용됩니다 · 기록 보관/플레이리스트 기능은 추후 제공</footer>
+      <button class="home-diary-button" id="openDiaryButton" type="button" aria-label="RunBeat 러닝 다이어리 열기">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18"/></svg>
+        러닝 다이어리 · 기록 작성/모음
+      </button>
+      <footer class="foot">운동 기록은 일기에 직접 저장할 때만 이 기기에 보관됩니다 · PlayList 작성은 추후 제공</footer>
     </div>
+
+    <section id="diaryRoot" class="diary-root" hidden aria-label="RunBeat Diary">
+      <div class="diary-screen" id="diaryCalendarScreen">
+        <header class="diary-head">
+          <button class="diary-back" id="diaryHomeBack" type="button" aria-label="러닝 측정 화면으로 돌아가기">‹</button>
+          <div class="diary-head-text">
+            <p class="diary-eyebrow">MY RUNNING STORY</p>
+            <h2>RunBeat <span>Diary.</span></h2>
+          </div>
+          <span aria-hidden="true" style="font-size:27px">📅</span>
+        </header>
+        <p class="diary-subtitle">달력에서 날짜를 선택해 러닝 기록을 모으고, 그날의 기분과 음악을 일기로 남겨 보세요.</p>
+        <section class="diary-stats" aria-label="선택한 달의 운동 통계">
+          <div class="diary-stat"><span class="label">이번 달 거리</span><div id="diaryStatDistance"></div></div>
+          <div class="diary-stat"><span class="label">러닝 횟수</span><div id="diaryStatRuns"></div></div>
+          <div class="diary-stat"><span class="label">평균 페이스</span><div id="diaryStatPace"></div></div>
+        </section>
+        <section class="diary-calendar" aria-label="월별 기록 달력">
+          <div class="diary-month-nav">
+            <button id="diaryPrevMonth" type="button" aria-label="이전 달">‹</button>
+            <h3 id="diaryMonthLabel">달력</h3>
+            <button id="diaryNextMonth" type="button" aria-label="다음 달">›</button>
+          </div>
+          <div class="diary-week" aria-hidden="true">
+            <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+          </div>
+          <div class="diary-days" id="diaryDays"></div>
+          <div class="diary-month-info"><span class="diary-legend-dot"></span> 점 표시가 있는 날짜에는 저장된 기록이 있어요.</div>
+        </section>
+        <section aria-label="선택한 날짜의 러닝 기록" class="diary-screen" style="gap:12px">
+          <div class="diary-day-header"><h3 id="diaryDayTitle">날짜별 기록</h3><span class="diary-pill" id="diaryDayCount">기록 없음</span></div>
+          <div class="diary-entries" id="diaryEntries"></div>
+        </section>
+        <button type="button" class="diary-add" id="diaryAddButton">＋ 새 러닝 일기 작성</button>
+        <p class="diary-help">저장한 기록은 이 브라우저의 저장소에만 보관돼요. 브라우저 데이터를 지우거나 다른 기기로 옮기면 기록을 복구할 수 없으니 주의해 주세요.</p>
+      </div>
+
+      <div class="diary-screen" id="diaryEditorScreen" hidden>
+        <header class="diary-head">
+          <button class="diary-back" id="diaryEditorBack" type="button" aria-label="달력으로 돌아가기">‹</button>
+          <div class="diary-head-text">
+            <p class="diary-eyebrow">RUNNING JOURNAL</p>
+            <h2 id="diaryEditorTitle">새 러닝 일기 작성</h2>
+          </div>
+          <span aria-hidden="true" style="font-size:27px">✍️</span>
+        </header>
+        <p class="diary-subtitle">러닝 기록을 남기고 오늘 들은 음악과 느낀 점을 적어 보세요.</p>
+        <form id="diaryForm" class="diary-form" novalidate>
+          <div class="diary-form-card">
+            <div class="diary-field">
+              <label for="diaryDate">운동 날짜 *</label>
+              <input id="diaryDate" name="date" type="date" min="2020-01-01" max="2100-12-31" required>
+            </div>
+            <div class="diary-field">
+              <label for="diaryGenre">🎧 음악 장르 (직접 입력)</label>
+              <input id="diaryGenre" name="genre" type="text" maxlength="60" placeholder="예: 클래식, J-POP, 유로비트, 시티팝" autocomplete="off">
+              <span class="diary-field-hint">원하는 장르를 자유롭게 입력하세요. 미입력도 가능해요.</span>
+            </div>
+            <div class="diary-two">
+              <div class="diary-field">
+                <label for="diaryKm">이동 거리 (km) *</label>
+                <input id="diaryKm" name="km" type="number" min="0.01" max="999" step="any" inputmode="decimal" placeholder="예: 1.20" required>
+              </div>
+              <div class="diary-field">
+                <label for="diaryDuration">운동 시간 *</label>
+                <input id="diaryDuration" name="duration" type="text" inputmode="numeric" maxlength="9" placeholder="예: 09:22" required>
+              </div>
+            </div>
+            <div class="diary-calc"><span>평균 페이스 자동 계산</span><strong id="diaryPacePreview">--:-- /km</strong></div>
+            <div class="diary-field">
+              <label for="diaryMood">오늘의 컨디션</label>
+              <select id="diaryMood" name="mood">
+                <option value="힘듦">😫 힘듦</option>
+                <option value="보통" selected>😐 보통</option>
+                <option value="좋음">😊 좋음</option>
+              </select>
+            </div>
+            <div class="diary-two">
+              <div class="diary-field">
+                <label for="diaryWalk">걷기 횟수 (선택)</label>
+                <input id="diaryWalk" name="walk" type="number" min="0" max="100000" step="1" inputmode="numeric" placeholder="예: 2">
+              </div>
+              <div class="diary-field">
+                <label for="diaryEffort">운동강도 1~10 (선택)</label>
+                <input id="diaryEffort" name="effort" type="number" min="1" max="10" step="1" inputmode="numeric" placeholder="예: 7">
+              </div>
+            </div>
+            <div class="diary-field">
+              <label for="diaryNote">오늘의 러닝 일기</label>
+              <textarea id="diaryNote" name="note" maxlength="1200" rows="4" placeholder="오늘의 기분, 음악과 함께 달렸을 때 느낀 점, 잘한 점 등을 적어 보세요."></textarea>
+            </div>
+          </div>
+          <p class="diary-notice">🎵 입력한 음악 장르와 운동 기록은 다이어리에 함께 저장돼요. 음악 장르가 운동 성과를 반드시 향상시킨다는 뜻은 아니에요.</p>
+          <div class="diary-submit-row">
+            <button class="diary-submit" type="submit" id="diarySubmit">일기 저장하기</button>
+            <button class="diary-cancel" id="diaryCancel" type="button">취소하고 달력으로</button>
+          </div>
+        </form>
+      </div>
+    </section>
   </main>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -193,6 +292,7 @@
     <p>기록은 서버에 저장하지 않아요. 아래 버튼을 누르면 오늘 결과를 9:16 비율 PNG 이미지로 저장할 수 있어요.</p>
     <div class="result-actions">
       <button class="save-result" id="captureButton" type="button">📸 캡쳐하기 · 이미지 저장</button>
+      <button class="save-result" id="writeDiaryFromRunButton" type="button">✍️ 이 기록으로 러닝 일기 작성</button>
       <button class="close-result" id="newRunButton" type="button">새 기록 시작하기</button>
     </div>
   </dialog>
@@ -297,13 +397,13 @@
     });
     finish.addEventListener("click",()=>{
       if(state==="idle")return;
-      const total=elapsed();const meters=distanceMeters;const genre=$("genre").value;
+      const total=elapsed();const meters=distanceMeters;const genre=$("genre").value.trim() || "선택 안 함";
       stopGPS();stopTicker();accruedMs=total;state="idle";render();
       setText("resultDesc",genre==="선택 안 함" ? "오늘 측정한 러닝 결과입니다." : "음악 조건: "+genre+" · 오늘 측정한 러닝 결과입니다.");
       const pairs=[["운동 시간",formatTime(total)],["이동 거리",(meters/1000).toFixed(2)+" km"],
         ["평균 속도",speedValue(total,meters).toFixed(1)+" km/h"],["평균 페이스",formatPace(total,meters)+" /km"],
         ["예상 걸음",Math.round(meters/STEP_LENGTH).toLocaleString("ko-KR")+"걸음"]];
-      completedRun={when:new Date(),genre,pairs:pairs.map(([label,value])=>({label,value}))};
+      completedRun={when:new Date(),genre,seconds:Math.round(total/1000),km:meters/1000,pairs:pairs.map(([label,value])=>({label,value}))};
       const target=$("resultList");target.replaceChildren();
       for(const [label,value] of pairs){
         const item=document.createElement("div");item.className="result-item";
@@ -386,6 +486,16 @@
         toast("이미지 저장에 실패했어요. 화면 캡처 기능을 이용해 주세요.");
       }finally{btn.disabled=false;}
     });
+    $("writeDiaryFromRunButton").addEventListener("click",()=>{
+      if(!completedRun)return;
+      const d=completedRun.when;
+      const date=[d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");
+      $("finishDialog").close();
+      window.dispatchEvent(new CustomEvent("runbeat:write-diary",{
+        detail:{date,km:completedRun.km,seconds:completedRun.seconds,
+          genre:completedRun.genre==="선택 안 함"?"":completedRun.genre}
+      }));
+    });
     $("newRunButton").addEventListener("click",()=>{
       $("finishDialog").close();completedRun=null;accruedMs=0;distanceMeters=0;gpsMode="gps";lastFix=null;
       setText("gpsText","시작하면 GPS를 확인해요");render();
@@ -416,5 +526,6 @@
     render();
   })();
   </script>
+  <script src="./diary.js"></script>
 </body>
 </html>
