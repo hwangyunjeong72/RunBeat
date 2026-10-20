@@ -108,6 +108,7 @@
     @media (prefers-reduced-motion:reduce) {*,*::before,*::after {animation:none!important;transition:none!important;}}
   </style>
   <link rel="stylesheet" href="./diary.css?v=diary-nav-2">
+  <link rel="stylesheet" href="./playlist.css?v=playlist-1">
 </head>
 <body>
   <main class="phone" id="app">
@@ -120,6 +121,10 @@
       <button id="menuDiary" class="app-menu-item" type="button">
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18"/></svg>
         <span><strong>기록 작성/모음</strong><small>달력형 러닝 다이어리</small></span>
+      </button>
+      <button id="menuPlaylist" class="app-menu-item" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="17" r="3"/><circle cx="18" cy="14" r="3"/><path d="M10 17V5l11-2v11"/></svg>
+        <span><strong>PlayList</strong><small>음악 목록 만들기 · 수정 · 삭제</small></span>
       </button>
     </nav>
     <div class="inner">
@@ -199,7 +204,7 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18"/></svg>
         러닝 다이어리 · 기록 작성/모음
       </button>
-      <footer class="foot">운동 기록은 일기에 직접 저장할 때만 이 기기에 보관됩니다 · PlayList 작성은 추후 제공</footer>
+      <footer class="foot">운동 기록과 플레이리스트는 저장 버튼을 눌렀을 때 이 브라우저에 보관됩니다</footer>
     </div>
 
     <section id="diaryRoot" class="diary-root" hidden aria-label="RunBeat Diary">
@@ -297,6 +302,61 @@
           <div class="diary-submit-row">
             <button class="diary-submit" type="submit" id="diarySubmit">일기 저장하기</button>
             <button class="diary-cancel" id="diaryCancel" type="button">취소하고 달력으로</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section id="playlistRoot" class="playlist-root" aria-label="RunBeat PlayList" hidden>
+      <div class="playlist-screen" id="plListScreen">
+        <header class="pl-header">
+          <button id="plBackToRun" class="pl-back" type="button" aria-label="RunBeat 러닝 측정 화면으로">‹</button>
+          <div class="pl-heading"><p class="pl-kicker">YOUR RUNNING MUSIC</p><h2>RunBeat <span>PlayList.</span></h2></div>
+          <button class="iconbtn" id="playlistMenuButton" type="button" aria-label="메뉴 열기" aria-controls="appMenuPanel" aria-expanded="false" title="화면 이동 메뉴"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+        </header>
+        <p class="pl-sub">달릴 때 듣는 음악을 나만의 플레이리스트로 모아 보세요. 곡 이름만 적거나 유튜브 링크를 넣을 수도 있어요.</p>
+        <div class="pl-overview" aria-label="저장된 플레이리스트 통계">
+          <div><strong id="plCount">0개 플레이리스트</strong><span id="plTracksCount">0곡 등록</span></div>
+          <span class="pl-disc" aria-hidden="true">🎧</span>
+        </div>
+        <div id="plList" class="pl-list" aria-label="플레이리스트 목록"></div>
+        <div class="pl-bottom" aria-label="플레이리스트 관리">
+          <button class="pl-btn primary" id="plNewButton" type="button">＋ 새로 만들기</button>
+          <button class="pl-btn" id="plEditButton" type="button" disabled>✎ 수정</button>
+          <button class="pl-btn danger" id="plDeleteButton" type="button" disabled>삭제</button>
+        </div>
+        <p class="pl-note">목록을 선택하고 수정 또는 삭제를 눌러 관리해요. 정보는 이 기기의 브라우저에만 저장되며, 유튜브 동영상은 새 창에서 열립니다.</p>
+      </div>
+
+      <div class="playlist-screen" id="plEditorScreen" hidden>
+        <header class="pl-header">
+          <button id="plBackToList" class="pl-back" type="button" aria-label="플레이리스트 목록으로">‹</button>
+          <div class="pl-heading"><p class="pl-kicker">EDIT YOUR MUSIC</p><h2 id="plEditorTitle">새 플레이리스트 만들기</h2></div>
+          <button class="iconbtn" id="playlistEditorMenuButton" type="button" aria-label="메뉴 열기" aria-controls="appMenuPanel" aria-expanded="false" title="화면 이동 메뉴"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+        </header>
+        <form id="plForm" class="pl-form" novalidate>
+          <section class="pl-panel" aria-label="플레이리스트 정보">
+            <div class="pl-field">
+              <label for="plTitle">플레이리스트 제목 *</label>
+              <input id="plTitle" type="text" placeholder="예: 플레이리스트 1" maxlength="80" required>
+            </div>
+            <div class="pl-field">
+              <label for="plGenre">음악 장르 (직접 입력) *</label>
+              <input id="plGenre" type="text" placeholder="예: 재즈, J-POP, 유로비트" maxlength="60" required>
+              <span class="pl-helper">정해진 장르 목록 없이 원하는 이름을 자유롭게 적어 주세요.</span>
+            </div>
+          </section>
+          <section class="pl-panel" aria-label="음악 목록 입력">
+            <div class="pl-track-heading">
+              <h3>🎵 곡 목록</h3>
+              <button id="plAddSong" type="button" class="pl-small-btn">＋ 곡 추가</button>
+            </div>
+            <p class="pl-helper" style="margin:0">각 곡마다 제목 또는 유튜브 동영상 주소 중 하나만 입력해도 돼요. 빈 줄은 저장할 때 제외돼요.</p>
+            <div class="pl-song-fields" id="plSongFields"></div>
+          </section>
+          <div class="pl-form-actions">
+            <button type="submit" class="pl-btn primary" id="plSaveButton">플레이리스트 저장</button>
+            <button type="button" class="pl-btn" id="plCancel">취소하고 목록으로</button>
           </div>
         </form>
       </div>
@@ -545,7 +605,8 @@
     render();
   })();
   </script>
-  <script src="./diary.js?v=diary-nav-2"></script>
-  <script src="./menu.js?v=diary-nav-2"></script>
+  <script src="./diary.js?v=playlist-1"></script>
+  <script src="./playlist.js?v=playlist-1"></script>
+  <script src="./menu.js?v=playlist-1"></script>
 </body>
 </html>
