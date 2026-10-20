@@ -106,6 +106,7 @@
     }
     if(!diaryRoot.hidden&&window.RunBeatNavigation?.canLeaveDiary&&!window.RunBeatNavigation.canLeaveDiary())return false;
     if(!canLeave())return false;
+    window.RunBeatNavigation?.hideDiary?.();
     home.hidden=true;diaryRoot.hidden=true;root.hidden=false;
     switchList();
     return true;
