@@ -232,7 +232,10 @@
     return true;
   };
   // Menu navigation is direct; if a playlist editor has pending changes, confirm before leaving.
-  window.RunBeatNavigation={toRunBeat:goToRunBeat,toDiary:goToDiary,canLeaveDiary:confirmLeaveEditor};
+  const hideDiary=()=>{
+    root.hidden=true;calendarScreen.hidden=false;editorScreen.hidden=true;editing=null;
+  };
+  window.RunBeatNavigation={toRunBeat:goToRunBeat,toDiary:goToDiary,canLeaveDiary:confirmLeaveEditor,hideDiary};
   window.addEventListener("runbeat:navigate-home",goToRunBeat);
   window.addEventListener("runbeat:navigate-diary",goToDiary);
   window.addEventListener("runbeat:write-diary",event=>{
